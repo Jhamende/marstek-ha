@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "discovery_start": {
+        "title": "Marstek Venus E — Découverte réseau",
+        "description": "{count} appareil(s) trouvé(s) sur votre réseau. Sélectionnez-en un ou entrez l'IP manuellement.",
+        "data": {
+          "device_choice": "Appareil"
+        }
+      },
+      "manual": {
+        "title": "Marstek Venus E — Configuration manuelle",
+        "description": "Entrez l'adresse IP et le port UDP de votre batterie.",
+        "data": {
+          "host": "Adresse IP",
+          "port": "Port UDP (défaut 30000)"
+        }
+      },
+      "confirm": {
+        "title": "Confirmer l'appareil",
+        "description": "Confirmer la configuration de **{device}** à {ip} (firmware v{fw}).",
+        "data": {
+          "device_label": "Nom convivial",
+          "port": "Port UDP",
+          "scan_interval": "Intervalle de scrutation (secondes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de joindre la batterie. Vérifiez l'IP, le port et que l'API locale est activée dans l'app Marstek.",
+      "unknown_device": "Appareil introuvable dans les résultats de découverte.",
+      "unknown": "Erreur inattendue."
+    },
+    "abort": {
+      "already_configured": "Cet appareil est déjà configuré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Marstek Venus E — Options",
+        "data": {
+          "device_label": "Nom convivial",
+          "scan_interval": "Intervalle de scrutation (secondes)"
+        }
+      }
+    }
+  }
+}

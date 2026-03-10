@@ -1,0 +1,133 @@
+set_passive_mode:
+  name: Set Passive Mode
+  description: >
+    Switch the battery to Passive mode with a specific power target and optional countdown.
+    Positive power = discharge to grid. Negative power = charge from grid.
+  fields:
+    device_id:
+      name: Device ID
+      description: "Config entry ID (optional if only one battery is configured)."
+      required: false
+      example: "abc123"
+      selector:
+        text:
+    power:
+      name: Power (W)
+      description: >
+        Target power in watts.
+        Positive → discharge to grid.
+        Negative → charge from grid (e.g. -2000 charges at 2 kW).
+      required: true
+      example: -2000
+      selector:
+        number:
+          min: -3000
+          max: 3000
+          step: 100
+          unit_of_measurement: W
+    cd_time:
+      name: Countdown (seconds)
+      description: >
+        How long to stay in passive mode. Set to 0 for indefinite.
+      required: false
+      default: 0
+      example: 3600
+      selector:
+        number:
+          min: 0
+          max: 86400
+          step: 60
+          unit_of_measurement: s
+
+set_manual_schedule:
+  name: Set Manual Schedule Slot
+  description: >
+    Configure one of the 10 manual-mode time slots.
+    The battery must be switched to Manual mode separately (use the Operating Mode selector).
+  fields:
+    device_id:
+      name: Device ID
+      description: "Config entry ID (optional if only one battery)."
+      required: false
+      selector:
+        text:
+    time_num:
+      name: Slot (0–9)
+      description: Schedule slot index (0 to 9).
+      required: true
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 9
+          step: 1
+    start_time:
+      name: Start Time
+      description: "Start time in HH:MM format (24h)."
+      required: true
+      example: "08:00"
+      selector:
+        text:
+    end_time:
+      name: End Time
+      description: "End time in HH:MM format (24h). Must be > start_time."
+      required: true
+      example: "20:00"
+      selector:
+        text:
+    week_set:
+      name: Days Bitmask
+      description: >
+        Bitmask for active days.
+        bit0=Mon, bit1=Tue, bit2=Wed, bit3=Thu, bit4=Fri, bit5=Sat, bit6=Sun.
+        127 = all days, 31 = weekdays only, 96 = weekend only.
+      required: false
+      default: 127
+      example: 127
+      selector:
+        number:
+          min: 0
+          max: 127
+          step: 1
+    power:
+      name: Power (W)
+      description: >
+        Target power for this slot in watts.
+        Positive → discharge. Negative → charge.
+      required: true
+      example: -1500
+      selector:
+        number:
+          min: -3000
+          max: 3000
+          step: 100
+          unit_of_measurement: W
+    enable:
+      name: Enable Slot
+      description: Whether this slot is active.
+      required: false
+      default: true
+      selector:
+        boolean:
+
+clear_schedules:
+  name: Clear All Manual Schedules
+  description: Disable all 10 manual schedule slots on the battery.
+  fields:
+    device_id:
+      name: Device ID
+      description: "Config entry ID (optional if only one battery)."
+      required: false
+      selector:
+        text:
+
+force_refresh:
+  name: Force Data Refresh
+  description: Immediately poll the battery outside the normal scan interval.
+  fields:
+    device_id:
+      name: Device ID
+      description: "Config entry ID (optional if only one battery)."
+      required: false
+      selector:
+        text:
