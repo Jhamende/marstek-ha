@@ -1,5 +1,6 @@
 {
   "name": "Marstek Venus E",
-  "render_readme": true,
-  "homeassistant": "2023.1.0"
+  "domain": "marstek_venus",
+  "content_in_root": false,
+  "render_readme": true
 }
