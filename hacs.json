@@ -2,5 +2,6 @@
   "name": "Marstek Venus E",
   "domain": "marstek_venus",
   "content_in_root": false,
-  "render_readme": true
+  "render_readme": true,
+  "logo": "images/logo.png"
 }
