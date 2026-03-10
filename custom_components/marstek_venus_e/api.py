@@ -271,38 +271,80 @@ class MarsktekAPI:
     async def get_all_status(self) -> dict[str, Any]:
         """
         Fetch all status endpoints and merge into a single dict.
-        ES.GetStatus is tried first; if it times out we gracefully fall back.
+
+        Confirmed working on VenusE 3.0 firmware V147:
+          - Bat.GetStatus   ✓
+          - ES.GetStatus    ✓  (energy totals in Wh → converted to kWh)
+          - ES.GetMode      ✓  (fallback)
+          - EM.GetStatus    ✓  (CT meter, may all be 0 if CT not connected)
+          - Wifi.GetStatus  ✓
+          - PV.GetStatus    ✗  Method not found on this device — SKIPPED
         """
         combined: dict[str, Any] = {}
 
-        # Bat status — most important, raise if it fails
+        # ── Bat.GetStatus ─────────────────────────────────────────────────────
         bat = await self.get_bat_status()
-        combined.update({"bat_" + k if k != "id" else k: v for k, v in bat.items()})
-        # Keep top-level soc for convenience
-        combined["soc"] = bat.get("soc")
+        # Expose fields with bat_ prefix to avoid collisions, keep soc at top level
+        combined["soc"]            = bat.get("soc")
+        combined["charg_flag"]     = bat.get("charg_flag")
+        combined["dischrg_flag"]   = bat.get("dischrg_flag")
+        combined["bat_temp"]       = bat.get("bat_temp")
+        combined["bat_capacity"]   = bat.get("bat_capacity")    # Wh remaining
+        combined["rated_capacity"] = bat.get("rated_capacity")  # Wh nominal
 
-        # ES status — may timeout on older firmware
+        # ── ES.GetStatus ──────────────────────────────────────────────────────
+        # Energy counters come back in Wh — divide by 1000 for kWh sensors
         try:
             es = await self.get_es_status()
-            combined.update(es)
-        except MarsktekTimeoutError:
-            _LOGGER.debug("ES.GetStatus timed out — will use ES.GetMode as fallback")
+            combined["bat_soc"]        = es.get("bat_soc")
+            combined["bat_cap"]        = es.get("bat_cap")          # Wh
+            combined["pv_power"]       = es.get("pv_power", 0)      # W
+            combined["ongrid_power"]   = es.get("ongrid_power", 0)  # W (+export / -import)
+            combined["offgrid_power"]  = es.get("offgrid_power", 0) # W
+            # Energy totals — device returns Wh, we expose kWh
+            _tpv  = es.get("total_pv_energy", 0) or 0
+            _tout = es.get("total_grid_output_energy", 0) or 0   # ← real field name
+            _tin  = es.get("total_grid_input_energy",  0) or 0   # ← real field name
+            _tld  = es.get("total_load_energy", 0) or 0
+            combined["total_pv_energy"]      = round(_tpv  / 1000, 3)
+            combined["total_grid_export"]    = round(_tout / 1000, 3)
+            combined["total_grid_import"]    = round(_tin  / 1000, 3)
+            combined["total_load_energy"]    = round(_tld  / 1000, 3)
+            # Also get mode from ES.GetMode for the mode sensor
             try:
                 es_mode = await self.get_es_mode()
-                combined.update(es_mode)
+                combined["mode"] = es_mode.get("mode")
             except MarsktekTimeoutError:
-                _LOGGER.warning("ES.GetMode also timed out; energy data unavailable")
+                pass
+        except MarsktekTimeoutError:
+            _LOGGER.debug("ES.GetStatus timed out — falling back to ES.GetMode")
+            try:
+                es_mode = await self.get_es_mode()
+                combined["ongrid_power"]  = es_mode.get("ongrid_power", 0)
+                combined["offgrid_power"] = es_mode.get("offgrid_power", 0)
+                combined["mode"]          = es_mode.get("mode")
+            except MarsktekTimeoutError:
+                _LOGGER.warning("ES.GetMode also timed out")
+        except MarsktekAPIError:
+            _LOGGER.debug("ES.GetStatus API error — falling back to ES.GetMode")
+            try:
+                es_mode = await self.get_es_mode()
+                combined["ongrid_power"]  = es_mode.get("ongrid_power", 0)
+                combined["offgrid_power"] = es_mode.get("offgrid_power", 0)
+                combined["mode"]          = es_mode.get("mode")
+            except MarsktekAPIError:
+                pass
 
-        # EM (CT meter) — optional
+        # ── EM.GetStatus (CT meter) ───────────────────────────────────────────
         try:
             em = await self.get_em_status()
-            combined["ct_state"] = em.get("ct_state", 0)
+            combined["ct_state"]      = em.get("ct_state", 0)
             combined["phase_a_power"] = em.get("a_power", 0)
             combined["phase_b_power"] = em.get("b_power", 0)
             combined["phase_c_power"] = em.get("c_power", 0)
             combined["total_ct_power"] = em.get("total_power", 0)
-        except MarsktekTimeoutError:
-            _LOGGER.debug("EM.GetStatus timed out — CT data unavailable")
+        except (MarsktekTimeoutError, MarsktekAPIError):
+            _LOGGER.debug("EM.GetStatus unavailable")
 
         # WiFi — optional
         try:

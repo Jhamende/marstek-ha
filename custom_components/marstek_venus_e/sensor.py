@@ -164,7 +164,7 @@ SENSOR_DESCRIPTIONS: tuple[MarsktekSensorDescription, ...] = (
     ),
     MarsktekSensorDescription(
         key="total_grid_export",
-        data_key="total_grid_output",
+        data_key="total_grid_export",
         name="Total Grid Export",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -173,7 +173,7 @@ SENSOR_DESCRIPTIONS: tuple[MarsktekSensorDescription, ...] = (
     ),
     MarsktekSensorDescription(
         key="total_grid_import",
-        data_key="total_grid_input",
+        data_key="total_grid_import",
         name="Total Grid Import",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
