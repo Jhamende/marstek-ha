@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import voluptuous as vol
 
@@ -45,6 +46,42 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.BUTTON,
 ]
+
+
+# ── Ressource Lovelace card ─────────────────────────────────────────────────
+
+_CARD_VERSION = "1.2.0"
+_CARD_URL     = f"/marstek_venus_e/marstek-venus-card.js?v={_CARD_VERSION}"
+_WWW_PATH     = Path(__file__).parent / "www" / "marstek-venus-card.js"
+_RESOURCE_KEY = f"{DOMAIN}_card_registered"
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Register the Lovelace JS resource once at startup."""
+    _register_lovelace_card(hass)
+    return True
+
+
+def _register_lovelace_card(hass: HomeAssistant) -> None:
+    """Serve the card JS file and register it as a Lovelace resource."""
+    if hass.data.get(_RESOURCE_KEY):
+        return  # Already registered in this session
+
+    # Serve the www/ folder as a static path
+    hass.http.register_static_path(
+        "/marstek_venus_e",
+        str(_WWW_PATH.parent),
+        cache_headers=False,
+    )
+
+    # Register as a Lovelace resource (shows up in Resources UI)
+    try:
+        hass.components.frontend.add_extra_js_url(hass, _CARD_URL)
+        _LOGGER.info("Marstek Venus Card registered: %s", _CARD_URL)
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.warning("Could not register Lovelace resource: %s", exc)
+
+    hass.data[_RESOURCE_KEY] = True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

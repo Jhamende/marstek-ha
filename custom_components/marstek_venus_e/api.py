@@ -310,6 +310,17 @@ class MarsktekAPI:
             combined["total_grid_export"]    = round(_tout / 1000, 3)
             combined["total_grid_import"]    = round(_tin  / 1000, 3)
             combined["total_load_energy"]    = round(_tld  / 1000, 3)
+            # ── bat_power : not returned by device → calculate from energy flows
+            # Convention : negative = charging, positive = discharging
+            #   bat_power = pv_power - ongrid_power - offgrid_power
+            # Examples:
+            #   pv=0,   ongrid=+299 (import), offgrid=0   → bat=-299W (charging from grid)
+            #   pv=800, ongrid=-200 (export), offgrid=300 → bat=+700W (discharging)
+            _pv  = combined.get("pv_power", 0) or 0
+            _og  = combined.get("ongrid_power", 0) or 0
+            _off = combined.get("offgrid_power", 0) or 0
+            combined["bat_power"] = round(_pv - _og - _off, 1)
+
             # Also get mode from ES.GetMode for the mode sensor
             try:
                 es_mode = await self.get_es_mode()
