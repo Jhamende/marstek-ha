@@ -1,13 +1,13 @@
 {
   "domain": "marstek_venus_e",
   "name": "Marstek Venus E (Local API)",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "config_flow": true,
-  "documentation": "https://github.com/jsys/marstip",
-  "issue_tracker": "",
+  "documentation": "https://github.com/Jhamende/marstek-ha",
+  "issue_tracker": "https://github.com/Jhamende/marstek-ha/issues",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@Jhamende"],
   "iot_class": "local_polling",
   "integration_type": "device"
 }

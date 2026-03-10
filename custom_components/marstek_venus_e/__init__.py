@@ -58,23 +58,26 @@ _RESOURCE_KEY = f"{DOMAIN}_card_registered"
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the Lovelace JS resource once at startup."""
-    _register_lovelace_card(hass)
+    await _async_register_lovelace_card(hass)
     return True
 
 
-def _register_lovelace_card(hass: HomeAssistant) -> None:
+async def _async_register_lovelace_card(hass: HomeAssistant) -> None:
     """Serve the card JS file and register it as a Lovelace resource."""
     if hass.data.get(_RESOURCE_KEY):
         return  # Already registered in this session
 
-    # Serve the www/ folder as a static path
-    hass.http.register_static_path(
-        "/marstek_venus_e",
-        str(_WWW_PATH.parent),
-        cache_headers=False,
-    )
+    # Serve the www/ folder as a static path (HA 2024.x API)
+    from homeassistant.components.http import StaticPathConfig
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(
+            url_path="/marstek_venus_e",
+            path=str(_WWW_PATH.parent),
+            cache_headers=False,
+        )
+    ])
 
-    # Register as a Lovelace resource (shows up in Resources UI)
+    # Register as a Lovelace resource
     try:
         hass.components.frontend.add_extra_js_url(hass, _CARD_URL)
         _LOGGER.info("Marstek Venus Card registered: %s", _CARD_URL)
