@@ -321,12 +321,11 @@ class MarsktekAPI:
             _off = combined.get("offgrid_power", 0) or 0
             combined["bat_power"] = round(_pv - _og - _off, 1)
 
-            # Also get mode from ES.GetMode for the mode sensor
-            try:
-                es_mode = await self.get_es_mode()
-                combined["mode"] = es_mode.get("mode")
-            except MarsktekTimeoutError:
-                pass
+            # Mode is already present in ES.GetStatus response on some firmware.
+            # We do NOT call ES.GetMode separately here to avoid any unintended
+            # side-effects on devices where querying this endpoint resets settings.
+            # The mode field comes directly from ES.GetStatus if the device provides it.
+            combined.setdefault("mode", es.get("mode"))
         except MarsktekTimeoutError:
             _LOGGER.debug("ES.GetStatus timed out — falling back to ES.GetMode")
             try:
